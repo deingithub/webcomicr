@@ -1,0 +1,13 @@
+name: webcomicr
+version: 0.1.0
+
+authors:
+  - Cassidy Dingenskirchen <admin@15318.de>
+
+targets:
+  webcomicr:
+    main: src/webcomicr.cr
+
+crystal: 0.30.1
+
+license: MIT
