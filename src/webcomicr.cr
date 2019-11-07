@@ -47,7 +47,7 @@ else
   # get "last" file, split off file extension, split by whitespace
   last_comic = Dir.glob("[0-9]*").sort.last.split(".")[0..-2].join.split(" ")
   next_url = comic.base_url + last_comic[1]
-  counter = last_comic[0].to_i
+  counter = last_comic[0].split("-")[0].to_i
 end
 
 headers = nil
