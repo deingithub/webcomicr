@@ -59,20 +59,22 @@ loop do
   LOG.info("Fetching ##{counter.to_s.rjust(5, '0')} — #{next_url}")
   response = HTTP::Client.get(next_url, headers: headers)
   body = response.body
-  panel_number = nil
-  if body.scan(comic.image).size > 1
-    panel_number = 1
+  panel_number = 0
+  multi_panels = body.scan(comic.image).size > 1
+
+  download_closure = ->(episode : Int32, do_multi_panels : Bool, panel : Int32, match_data : Regex::MatchData) do
+    spawn do
+      image_url = complete_url(match_data[1], next_url)
+      image_file = "#{episode.to_s.rjust(5, '0')}#{do_multi_panels ? "-" + panel.to_s : ""} #{next_url.lchop(comic.base_url)}.#{image_url.lchop(comic.base_url).split('.')[-1]}"
+      LOG.info("Downloading #{image_url}, Target Filename: #{image_file}")
+      image_data = HTTP::Client.get(image_url, headers: headers).body
+      File.write(image_file, image_data)
+    end
   end
 
   body.scan(comic.image) do |match_data|
-    image_url = complete_url(match_data[1], next_url)
-    image_file = "#{counter.to_s.rjust(5, '0')}#{panel_number ? "-" + panel_number.to_s : ""} #{next_url.lchop(comic.base_url)}.#{image_url.lchop(comic.base_url).split('.')[-1]}"
-    LOG.info("Downloading #{image_url}, Target Filename: #{image_file}")
-    image_data = HTTP::Client.get(image_url, headers: headers).body
-    File.write(image_file, image_data)
-    if panel_number
-      panel_number += 1
-    end
+    panel_number += 1
+    download_closure.call(counter, multi_panels, panel_number, match_data)
   end
 
   counter += 1
